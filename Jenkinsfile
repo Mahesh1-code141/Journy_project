@@ -35,7 +35,7 @@ pipeline {
             steps {
                 sh """
                 # Ensure Dockerfile matches the WAR name 'devops-portfolio.war'
-                if [ ! -f target/devops-portfolio.war ]; then
+                if [ ! -f target/*.jar ]; then
                     echo "ERROR: WAR file target/devops-portfolio.war not found!"
                     exit 1
                 fi
