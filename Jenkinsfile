@@ -6,12 +6,12 @@ pipeline {
         GIT_BRANCH     = "main"
 
         DOCKERHUB_USER = "mahesh2452"
-        IMAGE_NAME     = "Journey_project_img"
+        IMAGE_NAME     = "journey_project_img"
         IMAGE_TAG      = "${BUILD_NUMBER}"
 
         DOCKER_CREDS   = "Docker_CRED"
 
-        CONTAINER_NAME = "Journey_project_cont"
+        CONTAINER_NAME = "journey_project_cont"
         HOST_PORT      = "2006"
         CONTAINER_PORT = "8080"
     }
@@ -26,22 +26,29 @@ pipeline {
 
         stage('Build JAR File') {
             steps {
-                // Build JAR file with fixed name (from pom.xml finalName)
                 sh 'mvn clean package'
+            }
+        }
+
+        stage('Verify JAR File') {
+            steps {
+                sh '''
+                echo "Checking JAR file..."
+                ls -l target/
+
+                if ! ls target/*.jar 1> /dev/null 2>&1; then
+                    echo "ERROR: JAR file not found in target folder!"
+                    exit 1
+                fi
+                '''
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh """
-                # Ensure Dockerfile matches the WAR name 'devops-portfolio.war'
-                if [ ! -f target/*.jar ]; then
-                    echo "ERROR: WAR file target/devops-portfolio.war not found!"
-                    exit 1
-                fi
-
+                sh '''
                 docker build -t ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} .
-                """
+                '''
             }
         }
 
@@ -65,7 +72,7 @@ pipeline {
 
         stage('Deploy Container') {
             steps {
-                sh """
+                sh '''
                 docker stop ${CONTAINER_NAME} || true
                 docker rm ${CONTAINER_NAME} || true
 
@@ -73,7 +80,7 @@ pipeline {
                     -p ${HOST_PORT}:${CONTAINER_PORT} \
                     --name ${CONTAINER_NAME} \
                     ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                """
+                '''
             }
         }
     }
