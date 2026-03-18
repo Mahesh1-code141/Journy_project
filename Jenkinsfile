@@ -33,13 +33,22 @@ pipeline {
         stage('Verify JAR File') {
             steps {
                 sh '''
-                echo "Checking JAR file..."
+                echo "Checking target folder..."
                 ls -l target/
 
                 if ! ls target/*.jar 1> /dev/null 2>&1; then
-                    echo "ERROR: JAR file not found in target folder!"
+                    echo "ERROR: JAR file not found!"
                     exit 1
                 fi
+                '''
+            }
+        }
+
+        stage('Check Docker Access') {
+            steps {
+                sh '''
+                echo "Checking Docker access..."
+                docker ps || (echo "ERROR: Docker permission issue" && exit 1)
                 '''
             }
         }
