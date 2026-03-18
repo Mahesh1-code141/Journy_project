@@ -24,9 +24,9 @@ pipeline {
             }
         }
 
-        stage('Build WAR File') {
+        stage('Build JAR File') {
             steps {
-                // Build WAR file with fixed name (from pom.xml finalName)
+                // Build JAR file with fixed name (from pom.xml finalName)
                 sh 'mvn clean package'
             }
         }
