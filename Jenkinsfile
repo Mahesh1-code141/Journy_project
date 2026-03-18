@@ -1,45 +1,80 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven'
-        jdk 'JDK17'
+    environment {
+        GIT_REPO       = "https://github.com/Mahesh1-code141/Journy_project.git"
+        GIT_BRANCH     = "main"
+
+        DOCKERHUB_USER = "mahesh2452"
+        IMAGE_NAME     = "Journey_project_img"
+        IMAGE_TAG      = "${BUILD_NUMBER}"
+
+        DOCKER_CREDS   = "Docker_CRED"
+
+        CONTAINER_NAME = "Journey_project_cont"
+        HOST_PORT      = "2006"
+        CONTAINER_PORT = "8080"
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/YOUR_USERNAME/java-arcade-game.git'
+                git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
             }
         }
 
-        stage('Build') {
+        stage('Build WAR File') {
             steps {
-                sh 'mvn clean compile'
+                // Build WAR file with fixed name (from pom.xml finalName)
+                sh 'mvn clean package'
             }
         }
 
-        stage('Test') {
+        stage('Build Docker Image') {
             steps {
-                sh 'mvn test'
+                sh """
+                # Ensure Dockerfile matches the WAR name 'devops-portfolio.war'
+                if [ ! -f target/devops-portfolio.war ]; then
+                    echo "ERROR: WAR file target/devops-portfolio.war not found!"
+                    exit 1
+                fi
+
+                docker build -t ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} .
+                """
             }
         }
 
-        stage('Package') {
+        stage('DockerHub Login') {
             steps {
-                sh 'mvn package'
+                withCredentials([usernamePassword(
+                    credentialsId: "${DOCKER_CREDS}",
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                }
             }
         }
-    }
 
-    post {
-        success {
-            echo '🎉 Build Successful!'
+        stage('Push Image to DockerHub') {
+            steps {
+                sh "docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
         }
-        failure {
-            echo '❌ Build Failed!'
+
+        stage('Deploy Container') {
+            steps {
+                sh """
+                docker stop ${CONTAINER_NAME} || true
+                docker rm ${CONTAINER_NAME} || true
+
+                docker run -d \
+                    -p ${HOST_PORT}:${CONTAINER_PORT} \
+                    --name ${CONTAINER_NAME} \
+                    ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                """
+            }
         }
     }
 }
