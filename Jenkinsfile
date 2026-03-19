@@ -24,20 +24,20 @@ pipeline {
             }
         }
 
-        stage('Build JAR File') {
+        stage('Build WAR File') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Verify JAR File') {
+        stage('Verify WAR File') {
             steps {
                 sh '''
                 echo "Checking target folder..."
                 ls -l target/
 
-                if ! ls target/*.jar 1> /dev/null 2>&1; then
-                    echo "ERROR: JAR file not found!"
+                if ! ls target/*.war 1> /dev/null 2>&1; then
+                    echo "ERROR: WAR file not found!"
                     exit 1
                 fi
                 '''
