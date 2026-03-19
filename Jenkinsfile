@@ -2,16 +2,16 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO       = "https://github.com/Mahesh1-code141/Mahesh_Portfolio.git"
+        GIT_REPO       = "https://github.com/Mahesh1-code141/Journy_project.git"
         GIT_BRANCH     = "main"
 
         DOCKERHUB_USER = "mahesh2452"
-        IMAGE_NAME     = "mahesh_portfolio"
+        IMAGE_NAME     = "Journey-app"
         IMAGE_TAG      = "${BUILD_NUMBER}"
 
         DOCKER_CREDS   = "Docker_CRED"
 
-        CONTAINER_NAME = "mahesh_portfolio"
+        CONTAINER_NAME = "Journey-app"
         HOST_PORT      = "2027"
         CONTAINER_PORT = "8080"
     }
