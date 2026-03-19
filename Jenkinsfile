@@ -10,10 +10,6 @@ pipeline {
         IMAGE_TAG      = "${BUILD_NUMBER}"
 
         DOCKER_CREDS   = "Docker_CRED"
-
-        CONTAINER_NAME = "journey_project_cont"
-        HOST_PORT      = "2006"
-        CONTAINER_PORT = "8080"
     }
 
     stages {
@@ -33,22 +29,11 @@ pipeline {
         stage('Verify WAR File') {
             steps {
                 sh '''
-                echo "Checking target folder..."
                 ls -l target/
-
                 if ! ls target/*.war 1> /dev/null 2>&1; then
-                    echo "ERROR: WAR file not found!"
+                    echo "WAR file not found!"
                     exit 1
                 fi
-                '''
-            }
-        }
-
-        stage('Check Docker Access') {
-            steps {
-                sh '''
-                echo "Checking Docker access..."
-                docker ps || (echo "ERROR: Docker permission issue" && exit 1)
                 '''
             }
         }
@@ -73,22 +58,12 @@ pipeline {
             }
         }
 
-        stage('Push Image to DockerHub') {
-            steps {
-                sh "docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
-            }
-        }
-
-        stage('Deploy Container') {
+        stage('Push Image') {
             steps {
                 sh '''
-                docker stop ${CONTAINER_NAME} || true
-                docker rm ${CONTAINER_NAME} || true
-
-                docker run -d \
-                    -p ${HOST_PORT}:${CONTAINER_PORT} \
-                    --name ${CONTAINER_NAME} \
-                    ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                docker tag ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ${DOCKERHUB_USER}/${IMAGE_NAME}:latest
+                docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:latest
                 '''
             }
         }
