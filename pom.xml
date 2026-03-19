@@ -1,17 +1,16 @@
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+<?xml version="1.0" encoding="UTF-8"?>
 
-@SpringBootApplication
-public class Application extends SpringBootServletInitializer {
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    @Override
-    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.sources(Application.class);
-    }
+    <modelVersion>4.0.0</modelVersion>
 
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-}
+    <groupId>com.example</groupId>
+    <artifactId>journey_project</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <packaging>war</packaging>
+
+</project>
