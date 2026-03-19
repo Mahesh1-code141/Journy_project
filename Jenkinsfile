@@ -1,16 +1,12 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven'   // Ensure Maven is configured in Jenkins
-    }
-
     environment {
         GIT_REPO       = "https://github.com/Mahesh1-code141/Journy_project.git"
         GIT_BRANCH     = "main"
 
         DOCKERHUB_USER = "mahesh2452"
-        IMAGE_NAME     = "journey-app"   // lowercase best practice
+        IMAGE_NAME     = "journey-app"
         IMAGE_TAG      = "${BUILD_NUMBER}"
         LATEST_TAG     = "latest"
 
@@ -20,7 +16,7 @@ pipeline {
         HOST_PORT      = "2027"
         CONTAINER_PORT = "8080"
 
-        WAR_FILE       = "journey_project.war"  // match your actual WAR name
+        WAR_FILE       = "journey_project.war"
     }
 
     stages {
@@ -28,6 +24,12 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Check Maven') {
+            steps {
+                sh 'mvn -v'
             }
         }
 
@@ -41,7 +43,7 @@ pipeline {
             steps {
                 sh """
                 if [ ! -f target/${WAR_FILE} ]; then
-                    echo "ERROR: WAR file target/${WAR_FILE} not found!"
+                    echo "ERROR: WAR file not found!"
                     ls target/
                     exit 1
                 fi
@@ -70,7 +72,7 @@ pipeline {
             }
         }
 
-        stage('Push Image to DockerHub') {
+        stage('Push Image') {
             steps {
                 sh """
                 docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
@@ -93,7 +95,7 @@ pipeline {
             }
         }
 
-        stage('Cleanup Old Images') {
+        stage('Cleanup') {
             steps {
                 sh 'docker image prune -f'
             }
