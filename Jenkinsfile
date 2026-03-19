@@ -2,14 +2,18 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO       = "https://github.com/Mahesh1-code141/Journy_project.git"
+        GIT_REPO       = "https://github.com/Mahesh1-code141/Mahesh_Portfolio.git"
         GIT_BRANCH     = "main"
 
         DOCKERHUB_USER = "mahesh2452"
-        IMAGE_NAME     = "journey_project_img"
+        IMAGE_NAME     = "mahesh_portfolio"
         IMAGE_TAG      = "${BUILD_NUMBER}"
 
         DOCKER_CREDS   = "Docker_CRED"
+
+        CONTAINER_NAME = "mahesh_portfolio"
+        HOST_PORT      = "2027"
+        CONTAINER_PORT = "8080"
     }
 
     stages {
@@ -22,28 +26,22 @@ pipeline {
 
         stage('Build WAR File') {
             steps {
-                // ✅ Skip test compilation also
-                sh 'mvn clean package -Dmaven.test.skip=true'
-            }
-        }
-
-        stage('Verify WAR File') {
-            steps {
-                sh '''
-                ls -l target/
-                if ! ls target/*.war 1> /dev/null 2>&1; then
-                    echo "WAR file not found!"
-                    exit 1
-                fi
-                '''
+                // Build WAR file with fixed name (from pom.xml finalName)
+                sh 'mvn clean package'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh '''
+                sh """
+                # Ensure Dockerfile matches the WAR name 'devops-portfolio.war'
+                if [ ! -f target/devops-portfolio.war ]; then
+                    echo "ERROR: WAR file target/devops-portfolio.war not found!"
+                    exit 1
+                fi
+
                 docker build -t ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} .
-                '''
+                """
             }
         }
 
@@ -59,13 +57,23 @@ pipeline {
             }
         }
 
-        stage('Push Image') {
+        stage('Push Image to DockerHub') {
             steps {
-                sh '''
-                docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                docker tag ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ${DOCKERHUB_USER}/${IMAGE_NAME}:latest
-                docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:latest
-                '''
+                sh "docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                sh """
+                docker stop ${CONTAINER_NAME} || true
+                docker rm ${CONTAINER_NAME} || true
+
+                docker run -d \
+                    -p ${HOST_PORT}:${CONTAINER_PORT} \
+                    --name ${CONTAINER_NAME} \
+                    ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
+                """
             }
         }
     }
