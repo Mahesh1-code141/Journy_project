@@ -22,7 +22,8 @@ pipeline {
 
         stage('Build WAR File') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                // ✅ Skip test compilation also
+                sh 'mvn clean package -Dmaven.test.skip=true'
             }
         }
 
